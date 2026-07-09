@@ -267,8 +267,8 @@ table.nx-tbl{border-collapse:collapse;font-size:12px;width:100%}
     <!-- data panel -->
     <div class="nx-data" id="dataPanel">
       <div class="nx-data-in">
-        <div class="nx-data-h">Service-desk ticket export — sample</div>
-        <div class="nx-data-sub">9 of 300 rows. Hit <strong>Download workbook</strong> up top for the full file and do the real work in Excel — the <code>SLA_Targets</code> matrix lives on its own tab.</div>
+        <div class="nx-data-h" id="dataTitle">Service-desk ticket export — sample</div>
+        <div class="nx-data-sub" id="dataSub">9 of 300 rows. Hit <strong>Download workbook</strong> up top for the full file and do the real work in Excel.</div>
         <div id="dataTbl"></div>
       </div>
     </div>
@@ -356,9 +356,16 @@ const SAMPLE=[
 ];
 const COLS=["TicketID","Department","Category","Priority","Tier","TechYrs","ResolveHrs","Reopens","CSAT","Phase"];
 
+/* real values from the SLA_Targets and Portal_Pilot tabs */
+const SLA_COLS=["Priority \\ Tier","Tier 1","Tier 2","Tier 3"];
+const SLA_ROWS=[["P1",2,3,4],["P2",4,6,8],["P3",8,12,16],["P4",24,36,48]];
+const PORTAL_COLS=["OldPortal_sec","NewPortal_sec"];
+const PORTAL_ROWS=[[148,118.3],[155.8,135.7],[140.9,86.7],[124.8,108],[136.2,73.4],[122.2,88.1],[149.6,74.8],[182.8,113.4],[135.2,88.6]];
+
 const DATASET=`THE SHARED DATASET (use this world for every scenario; it matches the student's workbook):
 An IT service-desk ticket export, 300 rows. Columns: TicketID, Date, Department (IT Operations/Finance/HR/Sales/Marketing/Engineering), Category (Password Reset, Software Install, Access Request = simple; Network, Server, Security = infrastructure/hard), Priority (P1 highest…P4 lowest), PriorityScore (P1=4…P4=1), SupportTier (Tier 1/2/3), AssignedTech, TechExperienceYears, IsInfrastructure (1/0), ResolutionTimeHours, ReopenCount, SatisfactionScore (1-5), Phase (Pre-Upgrade/Post-Upgrade).
 Companion SLA_Targets matrix: Priority down the rows, SupportTier across the columns, target resolution HOURS at each intersection (P1: 2/3/4, P2: 4/6/8, P3: 8/12/16, P4: 24/36/48).
+Companion Portal_Pilot tab (used ONLY by the t-Test lesson): exactly two columns of task-completion times in SECONDS, named OldPortal_sec and NewPortal_sec, 14 rows each. These are two independent groups. NEVER invent other column names for this tab (there is no PortalVersion column, no TimeOnTaskMinutes column) and never call the units minutes.
 THE BURIED LESSON (surface it in Correlation and Regression): raw correlation shows MORE experience with LONGER resolution time — senior techs look slower. That is a confound: hard infrastructure tickets get routed to senior techs. Regression that controls for IsInfrastructure and Priority reveals experience actually PREDICTS FASTER resolution. Same data, opposite conclusion.
 
 TAB MAP (this class is 1000-level — always name the tab clearly): Sorting, Filtering, Analysis ToolPak, PivotTables, Correlation, z-Test, and Regression all work on the Tickets tab. INDEX/MATCH/MATCH works in the Tickets tab but looks up the SLA_Targets tab. t-Test works on the Portal_Pilot tab (old vs new portal times). Analysis ToolPak is enabled once via File > Options > Add-ins, then used from the Data tab.`;
@@ -380,6 +387,7 @@ HARD RULES:
 1. ARITHMETIC DEFERRAL — you NEVER compute numeric answers. Give the FORMULA the student types; Excel does the math. If asked "what's the average," answer with the formula, never a number.
 2. STATISTICAL HONESTY — never let bad inference slide. Flag correlation-vs-causation, small-n and normality assumptions, and the z-test's known-variance fiction when they arise.
 3. ONE MOVE AT A TIME — short, conversational replies. One question per turn. Never dump all four stages or nine skills at once. Wait for the student.
+4. NEVER INVENT DATA — use only the exact column names listed above, and only the exact tab names. Ticket IDs are formatted like INC-10001 (write them in backticks when shown to the student). If you are unsure a value exists, describe it generically ("a P1 ticket handled by Tier 3") rather than naming a specific row that may not exist.
 
 FORMAT: Put every Excel formula, function name, column name, and ticket value in backticks. Keep replies tight — a few short paragraphs at most.
 
@@ -416,21 +424,40 @@ STAGES.forEach((s,i)=>{
   stepsEl.appendChild(d);
 });
 
-/* build data table */
-(function(){
-  let h='<table class="nx-tbl"><thead><tr>'+COLS.map(c=>`<th>${c}</th>`).join('')+'</tr></thead><tbody>';
-  SAMPLE.forEach(r=>{
+/* build data table — reflects whichever tab the current lesson uses */
+function renderDataPanel(lessonId){
+  const title=document.getElementById('dataTitle');
+  const sub=document.getElementById('dataSub');
+  let cols, rows, priorityCol=-1, monoCol=-1;
+
+  if(lessonId==='ttest'){
+    title.textContent='Portal_Pilot tab — self-service portal pilot';
+    sub.innerHTML='Task-completion time in seconds. Two independent groups, small sample &rarr; two-sample t-test. Hit <strong>Download workbook</strong> for the full file.';
+    cols=PORTAL_COLS; rows=PORTAL_ROWS;
+  } else if(lessonId==='indexmatch'){
+    title.textContent='SLA_Targets tab — target resolution hours';
+    sub.innerHTML='Priority runs down the rows, SupportTier across the columns. You look up the value at the <em>intersection</em> — which is why VLOOKUP cannot do this. The ticket rows live on the <code>Tickets</code> tab.';
+    cols=SLA_COLS; rows=SLA_ROWS; monoCol=-1;
+  } else {
+    title.textContent='Tickets tab — service-desk export (sample)';
+    sub.innerHTML='9 of 300 rows. Hit <strong>Download workbook</strong> up top for the full file and do the real work in Excel.';
+    cols=COLS; rows=SAMPLE; priorityCol=3; monoCol=0;
+  }
+
+  let h='<table class="nx-tbl"><thead><tr>'+cols.map(c=>`<th>${c}</th>`).join('')+'</tr></thead><tbody>';
+  rows.forEach(r=>{
     h+='<tr>';
     r.forEach((v,i)=>{
-      if(i===0) h+=`<td class="mono">${v}</td>`;
-      else if(i===3){const p=String(v).toLowerCase();h+=`<td><span class="nx-pill nx-p-${p}">${v}</span></td>`;}
+      if(i===monoCol) h+=`<td class="mono">${v}</td>`;
+      else if(i===priorityCol){const p=String(v).toLowerCase();h+=`<td><span class="nx-pill nx-p-${p}">${v}</span></td>`;}
       else h+=`<td>${v}</td>`;
     });
     h+='</tr>';
   });
   h+='</tbody></table>';
   document.getElementById('dataTbl').innerHTML=h;
-})();
+}
+renderDataPanel(null);
 
 /* dial + steps paint */
 const SEGS=[...document.querySelectorAll('.nx-dial .seg')];
@@ -529,6 +556,7 @@ async function send(userText, opts){
 
 async function startLesson(id){
   const l=LESSONS[id];currentStage=-1;paint();
+  renderDataPanel(id);
   document.querySelectorAll('.nx-lesson').forEach(b=>b.classList.toggle('on',b.dataset.id===id));
   document.getElementById('topArc').textContent=l.arc+' Analytics';
   document.getElementById('topTitle').textContent=l.title;
