@@ -150,6 +150,10 @@ table.nx-tbl{border-collapse:collapse;font-size:12px;width:100%}
 .nx-typing span{width:7px;height:7px;border-radius:50%;background:var(--signal);opacity:.5;animation:blink 1.3s infinite}
 .nx-typing span:nth-child(2){animation-delay:.2s}.nx-typing span:nth-child(3){animation-delay:.4s}
 @keyframes blink{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-3px)}}
+.nx-sysline{max-width:780px;margin:6px auto 22px;display:flex;align-items:center;gap:14px}
+.nx-sysline span{height:1px;flex:1;background:var(--line)}
+.nx-sysline em{font-family:'Space Grotesk';font-style:normal;font-size:11.5px;font-weight:600;
+  letter-spacing:.04em;color:var(--text-faint);text-transform:uppercase;white-space:nowrap}
 .nx-err{color:#B4432E;font-size:13.5px;background:#FBEAE5;border:1px solid #F1C9BE;padding:11px 14px;border-radius:10px;line-height:1.55}
 .nx-toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;
   font-size:13px;padding:11px 18px;border-radius:10px;box-shadow:var(--shadow);opacity:0;transition:.25s;z-index:50;max-width:90%;text-align:center}
@@ -467,6 +471,12 @@ function md(raw){
 
 /* thread */
 const thread=document.getElementById('thread');
+function addSystemLine(text){
+  const hello=document.getElementById('hello');if(hello)hello.remove();
+  const d=document.createElement('div');d.className='nx-sysline';
+  d.innerHTML=`<span></span><em>${esc(text)}</em><span></span>`;
+  thread.appendChild(d);thread.scrollTop=thread.scrollHeight;
+}
 function addTurn(role,text){
   const hello=document.getElementById('hello');if(hello)hello.remove();
   const t=document.createElement('div');t.className='nx-turn rise';
@@ -497,9 +507,13 @@ async function callNexus(){
   return text;
 }
 
-async function send(userText){
+async function send(userText, opts){
   if(busy)return;busy=true;document.getElementById('send').disabled=true;
-  addTurn('me',userText);history.push({role:'user',parts:[{text:userText}]});addTyping();
+  opts=opts||{};
+  // A lesson kickoff carries setup instructions for the tutor. Send them to the
+  // model, but never render them as if the student typed them.
+  if(opts.systemNote){ addSystemLine(opts.systemNote); } else { addTurn('me',userText); }
+  history.push({role:'user',parts:[{text:userText}]});addTyping();
   try{
     const raw=await callNexus();const {stage,clean}=extractStage(raw);
     rmTyping();addTurn('bot',clean);history.push({role:'model',parts:[{text:raw}]});
@@ -527,10 +541,10 @@ async function startLesson(id){
     if(!data || data.needSelection){ toast('First select your data — highlight the header row and the rows beneath it — then pick the skill.'); return; }
     document.getElementById('topTabTxt').textContent=data.sheet;tb.hidden=false;
     const block=buildSheetBlock(data);
-    send(`Start the lesson on ${l.title}, taught on MY OWN selected data.\n\n${block}\n\nBegin at Concrete Experience: name the specific columns you'll use, then give one scenario grounded in what MY columns actually contain.`);
+    send(`Start the lesson on ${l.title}, taught on MY OWN selected data.\n\n${block}\n\nBegin at Concrete Experience: name the specific columns you'll use, then give one scenario grounded in what MY columns actually contain.`, {systemNote:`Starting lesson · ${l.title}`});
   } else {
     document.getElementById('topTabTxt').textContent=l.tab;tb.hidden=false;
-    send(`Start the lesson on ${l.title} (works on the ${l.tab}). Begin at Concrete Experience: your FIRST line must tell me exactly which tab to open, then give one specific scenario.`);
+    send(`Start the lesson on ${l.title} (works on the ${l.tab}). Begin at Concrete Experience: your FIRST line must tell me exactly which tab to open, then give one specific scenario.`, {systemNote:`Starting lesson · ${l.title}`});
   }
 }
 
