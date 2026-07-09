@@ -79,6 +79,9 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .nx-mode-lbl{font-family:'Space Grotesk';font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#8C99B4;margin-bottom:7px}
 .nx-mode{display:flex;background:rgba(255,255,255,.06);border-radius:9px;padding:3px;gap:3px}
 .nx-mode-btn{flex:1;padding:7px 6px;border-radius:7px;font-size:12px;font-weight:500;color:#C4CDDE;white-space:nowrap;transition:.15s}
+.nx-mode-btn.soon{opacity:.42;cursor:not-allowed}
+.nx-mode-btn.soon:hover{background:none}
+.nx-soon-tag{display:block;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:#8C99B4;font-weight:600;margin-top:1px}
 .nx-mode-btn.on{background:var(--signal);color:var(--ink);font-weight:600}
 .nx-mode-hint{font-size:10.5px;color:#7E8AA6;margin-top:7px;line-height:1.4}
 .nx-gear{width:34px;height:34px;border-radius:8px;color:var(--text-soft);display:grid;place-items:center;transition:background .15s}
@@ -209,7 +212,7 @@ table.nx-tbl{border-collapse:collapse;font-size:12px;width:100%}
       <div class="nx-mode-lbl">Data source</div>
       <div class="nx-mode" id="modeToggle">
         <button class="nx-mode-btn on" data-mode="guided">Guided</button>
-        <button class="nx-mode-btn" data-mode="mine">My sheet</button>
+        <button class="nx-mode-btn soon" data-mode="mine" disabled title="Teaching on your own worksheet — in development, not yet available.">My sheet<span class="nx-soon-tag">Coming soon</span></button>
       </div>
       <div class="nx-mode-hint" id="modeHint">Built-in help-desk dataset.</div>
     </div>
@@ -563,13 +566,12 @@ function submit(){const v=input.value.trim();if(!v||busy)return;input.value='';a
 document.querySelectorAll('.nx-mode-btn').forEach(b=>{
   b.onclick=()=>{
     const m=b.dataset.mode;
-    if(m==='mine' && !IN_EXCEL){ toast('Open Nexus inside Excel to teach on your own worksheet.'); return; }
+    // "My sheet" is in development — it works only on clean tabular data and is
+    // disabled until that limitation is handled properly. Guided is the only mode.
+    if(m==='mine'){ toast('Teaching on your own worksheet is still in development — coming soon.'); return; }
     MODE=m;
-    document.querySelectorAll('.nx-mode-btn').forEach(x=>x.classList.toggle('on',x===b));
-    document.getElementById('modeHint').textContent = m==='mine'
-      ? 'Select your data (headers + rows), then pick a skill.'
-      : 'Built-in help-desk dataset.';
-    toast(m==='mine' ? 'My-sheet mode — select your data, then pick a skill.' : 'Guided mode — the built-in help-desk dataset.');
+    document.querySelectorAll('.nx-mode-btn').forEach(x=>x.classList.toggle('on',x===b && x.dataset.mode!=='mine'));
+    document.getElementById('modeHint').textContent='Built-in help-desk dataset.';
   };
 });
 document.getElementById('dataBtn').onclick=function(){
