@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OfficeApp
+  xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+  xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
+  xsi:type="TaskPaneApp">
+
+  <!-- ============================================================
+       BEFORE YOU SIDELOAD: replace every occurrence of
+         https://tmpenwell.github.io/Nexus
+       with the exact folder URL where you deploy nexus.html and the
+       four nexus-icon-*.png files on GitHub Pages. All five files
+       (nexus.html + 4 icons) must sit in that same folder.
+       ============================================================ -->
+
+  <Id>914dca34-b90b-40b0-a491-771cf0064a1a</Id>
+  <Version>1.0.0.0</Version>
+  <ProviderName>Tasha Penwell</ProviderName>
+  <DefaultLocale>en-US</DefaultLocale>
+  <DisplayName DefaultValue="Nexus — MIS Analytics Tutor" />
+  <Description DefaultValue="A systems-analyst tutor that teaches Excel to MIS majors through the IT service-desk dataset, enforcing Kolb's experiential learning cycle." />
+  <IconUrl DefaultValue="https://tmpenwell.github.io/Nexus/nexus-icon-32.png" />
+  <HighResolutionIconUrl DefaultValue="https://tmpenwell.github.io/Nexus/nexus-icon-80.png" />
+  <SupportUrl DefaultValue="https://tmpenwell.github.io/Nexus/nexus.html" />
+
+  <Hosts>
+    <Host Name="Workbook" />
+  </Hosts>
+
+  <DefaultSettings>
+    <SourceLocation DefaultValue="https://tmpenwell.github.io/Nexus/nexus.html" />
+  </DefaultSettings>
+
+  <Permissions>ReadWriteDocument</Permissions>
+
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="VersionOverridesV1_0">
+    <Hosts>
+      <Host xsi:type="Workbook">
+        <DesktopFormFactor>
+          <FunctionFile resid="Nexus.Url" />
+          <ExtensionPoint xsi:type="PrimaryCommandSurface">
+            <OfficeTab id="TabHome">
+              <Group id="Nexus.Group">
+                <Label resid="Nexus.Group.Label" />
+                <Icon>
+                  <bt:Image size="16" resid="Nexus.Icon16" />
+                  <bt:Image size="32" resid="Nexus.Icon32" />
+                  <bt:Image size="80" resid="Nexus.Icon80" />
+                </Icon>
+                <Control xsi:type="Button" id="Nexus.OpenButton">
+                  <Label resid="Nexus.OpenButton.Label" />
+                  <Supertip>
+                    <Title resid="Nexus.OpenButton.Label" />
+                    <Description resid="Nexus.OpenButton.Tooltip" />
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Nexus.Icon16" />
+                    <bt:Image size="32" resid="Nexus.Icon32" />
+                    <bt:Image size="80" resid="Nexus.Icon80" />
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>ButtonId1</TaskpaneId>
+                    <SourceLocation resid="Nexus.Url" />
+                  </Action>
+                </Control>
+              </Group>
+            </OfficeTab>
+          </ExtensionPoint>
+        </DesktopFormFactor>
+      </Host>
+    </Hosts>
+
+    <Resources>
+      <bt:Images>
+        <bt:Image id="Nexus.Icon16" DefaultValue="https://tmpenwell.github.io/Nexus/nexus-icon-16.png" />
+        <bt:Image id="Nexus.Icon32" DefaultValue="https://tmpenwell.github.io/Nexus/nexus-icon-32.png" />
+        <bt:Image id="Nexus.Icon80" DefaultValue="https://tmpenwell.github.io/Nexus/nexus-icon-80.png" />
+      </bt:Images>
+      <bt:Urls>
+        <bt:Url id="Nexus.Url" DefaultValue="https://tmpenwell.github.io/Nexus/nexus.html" />
+      </bt:Urls>
+      <bt:ShortStrings>
+        <bt:String id="Nexus.Group.Label" DefaultValue="Nexus" />
+        <bt:String id="Nexus.OpenButton.Label" DefaultValue="Open Nexus" />
+      </bt:ShortStrings>
+      <bt:LongStrings>
+        <bt:String id="Nexus.OpenButton.Tooltip" DefaultValue="Open the Nexus MIS analytics tutor in a task pane." />
+      </bt:LongStrings>
+    </Resources>
+  </VersionOverrides>
+</OfficeApp>
